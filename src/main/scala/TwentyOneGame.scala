@@ -1,15 +1,8 @@
-object Main {
-
+object TwentyOneGame {
   def arrayToString[X](x: X): String = x match {
     case arr: Array[_] => arr.map(arrayToString).mkString("[", ", ", "]")
     case _ => x.toString
   }
-
-  def max(arr: Array[Int]): Int = arr.reduce((a, b) => if (a > b) a else b)
-
-  def min(arr: Array[Int]): Int = arr.reduce((a, b) => if (a < b) a else b)
-
-  def sum(arr: Array[Int]): Int = arr.reduce((a, b) => a + b)
 
   def parse(cardName: String): Int = cardName match {
     case "2" => 2

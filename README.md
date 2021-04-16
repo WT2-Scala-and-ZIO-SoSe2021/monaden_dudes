@@ -1,6 +1,6 @@
 # Team monaden_dudes
 
-### Member
+### Members
 
 - Lennard Grimm    
 - Max Lüdemann    

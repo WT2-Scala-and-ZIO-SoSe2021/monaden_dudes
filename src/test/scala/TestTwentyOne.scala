@@ -27,5 +27,6 @@ class TestTwentyOne extends AnyFlatSpec with should.Matchers {
     assert(TwentyOneGame.optimisticF(hand) == 33)
     assert(TwentyOneGame.pessimisticF(hand) == 3)
     assert(TwentyOneGame.determineBetterHandValue(hand) == 13)
+    assert(TwentyOneGame.determineBestestHandValue(hand) == 13)
   }
 }

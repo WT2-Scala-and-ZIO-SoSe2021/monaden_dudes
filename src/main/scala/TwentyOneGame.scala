@@ -62,11 +62,42 @@ object TwentyOneGame {
     case other => other
   }
 
+  // credit to kylewlacy https://gist.github.com/kylewlacy/38681caaee2b98949dd8
+  def partialCartesian(a:Array[Array[Int]], b:Array[Int]): Array[Array[Int]] = {
+    a.flatMap(xs => {
+      b.map(y => {
+        xs ++ Array(y)
+      })
+    })
+  }
+
+  def cartesianProduct(lists: Array[Array[Int]]): Array[Array[Int]] = {
+    lists.headOption match {
+      case Some(head) => {
+        val tail = lists.tail
+        val init = head.map(n => Array(n))
+
+        tail.foldLeft(init)((arr, list) => {
+         partialCartesian(arr, list)
+        })
+      }
+      case None => {
+        Array()
+      }
+    }
+  }
+
+  def determineBestestHandValue(hand: Array[Int]): Int = {
+    cartesianProduct(hand.map(values)).map(_.sum).filter(!isBust(_)).max
+  }
+
 
   def main(args: Array[String]): Unit = {
-    println(arrayToString(parse("2")))
-    println(arrayToString(parseAll(Array("2", "A"))))
-    println(arrayToString(values(11)))
-    println(arrayToString(values(1)))
+//    println(arrayToString(parse("2")))
+//    println(arrayToString(parseAll(Array("2", "A"))))
+//    println(arrayToString(values(11)))
+//    println(arrayToString(values(1)))
+    val hand = Array(8, 11, 11)
+    println(determineBestestHandValue(hand))
   }
 }

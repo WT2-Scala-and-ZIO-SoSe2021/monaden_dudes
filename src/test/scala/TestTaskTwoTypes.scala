@@ -9,6 +9,12 @@ class TestTaskTwoTypes extends AnyFlatSpec {
     assert(stack.push(10) == pushStack)
   }
 
+  "A push on an empty stack" should "return a stack with one element" in {
+    val stack = StackEmpty()
+    val pushStack = StackElem(1, StackEmpty())
+    (stack.push(1) == pushStack )
+  }
+
   "A stack pop with 3 elements" should "return a new stack with two elements" in {
     val stack = StackElem(1, StackElem(2, StackElem(3, StackEmpty())))
     val poppedStack = stack.pop
@@ -32,17 +38,17 @@ class TestTaskTwoTypes extends AnyFlatSpec {
 
   "A stack reverse" should "return a new stack with reverse order elements" in {
     val stack = StackElem(1, StackElem(2, StackElem(3, StackEmpty())))
-    val stackReversed = stack.reverse
+    val stackReversed = stack.reverse(None)
     val reverseStack = StackElem(3, StackElem(2, StackElem(1, StackEmpty())))
-    //assert(stackReversed.top.get == 3)
-    //assert(stackReversed.pop.get.top.get == 2)
-    //assert(stackReversed.pop.get.pop.get.top.get == 1)
+    assert(stackReversed.top.get == 3)
+    assert(stackReversed.pop.get.top.get == 2)
+    assert(stackReversed.pop.get.pop.get.top.get == 1)
 
     assert(stackReversed == reverseStack)
   }
 
   "A stack reverse on an empty stack" should "return the stack" in {
     val emptyStack = StackEmpty()
-    assert(emptyStack.reverse == StackEmpty())
+    assert(emptyStack.reverse(None) == StackEmpty())
   }
 }

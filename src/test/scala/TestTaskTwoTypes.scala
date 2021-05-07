@@ -1,8 +1,20 @@
-import org.scalatest.exceptions.TestFailedException
 import org.scalatest.flatspec.AnyFlatSpec
 
 class TestTaskTwoTypes extends AnyFlatSpec {
-  //TODO push test
+  // Ior Tests
+  "Mapping a function on an Ior with a right value" should "result in new Right Ior with the new value" in {
+    val ior = Ior.right(2)
+    assert(ior.map(x => x * 4) == Right(8))
+  }
+
+  "Mapping a function on an Ior with both right value and left value" should "result in a new Both Ior with the new value" in {
+    val exception = new RuntimeException("Error")
+    val ior = Ior.both(exception, 2)
+    val ior2 = ior.map(x => x * 4)
+    assert(ior2 == Both(exception, 8))
+  }
+
+  // Stack Tests
   "A push on a stack" should "add the new element to the top of the stack" in {
     val stack = StackElem(1, StackElem(2, StackEmpty()))
     val pushStack = StackElem(10, StackElem(1, StackElem(2, StackEmpty())))
@@ -10,9 +22,9 @@ class TestTaskTwoTypes extends AnyFlatSpec {
   }
 
   "A push on an empty stack" should "return a stack with one element" in {
-    val stack = StackEmpty()
+    val stack = StackEmpty[Int]()
     val pushStack = StackElem(1, StackEmpty())
-    (stack.push(1) == pushStack )
+    assert(stack.push(1) == pushStack )
   }
 
   "A stack pop with 3 elements" should "return a new stack with two elements" in {

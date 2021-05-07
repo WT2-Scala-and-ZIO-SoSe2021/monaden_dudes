@@ -34,8 +34,7 @@ object Ior {
   def unit[A](elem: A): Ior[A] = right(elem)
 }
 
-
-
+// Task
 trait StackLike[T] {
   def push(elem: T): StackLike[T]
 

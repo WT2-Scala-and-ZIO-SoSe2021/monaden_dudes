@@ -1,3 +1,4 @@
+import exercise1.TaskOneOperations
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should
 

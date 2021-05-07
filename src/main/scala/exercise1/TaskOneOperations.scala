@@ -1,3 +1,5 @@
+package exercise1
+
 object TaskOneOperations {
   def max(arr: Array[Int]): Int = arr.reduce((a, b) => if (a > b) a else b)
 

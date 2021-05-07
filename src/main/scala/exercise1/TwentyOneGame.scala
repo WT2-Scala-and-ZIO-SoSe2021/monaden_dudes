@@ -1,3 +1,4 @@
+package exercise1
 import TaskOneOperations.max, TaskOneOperations.min
 
 object TwentyOneGame {
@@ -25,26 +26,28 @@ object TwentyOneGame {
     case 11 => Array(1, 11)
     case _ => Array(card)
   }
+
   def isBust(handValue: Int): Boolean = handValue match {
     case x if x > 21 => true
     case _ => false
   }
 
   // simplified method
-  def determineHandValue (strategy:Array[Int]=>Int)(hand: Array[Int]): Int =
+  def determineHandValue(strategy: Array[Int] => Int)(hand: Array[Int]): Int =
     hand.map(x => strategy(values(x))).sum
 
   def optimisticF: Array[Int] => Int = determineHandValue(max)
+
   def pessimisticF: Array[Int] => Int = determineHandValue(min)
 
 
-  def determineBestHandValue(hand:Array[Int]):Int = optimisticF(hand) match {
+  def determineBestHandValue(hand: Array[Int]): Int = optimisticF(hand) match {
     case x if isBust(x) => pessimisticF(hand)
     case other => other
   }
 
   // context conditional Method
-  def contextF(hand:Array[Int], eleven:Boolean, bust:Boolean): Int = if (bust) {
+  def contextF(hand: Array[Int], eleven: Boolean, bust: Boolean): Int = if (bust) {
     pessimisticF(hand)
   } else {
     if (eleven) {
@@ -55,7 +58,7 @@ object TwentyOneGame {
   }
 
   def determineBetterHandValue(hand: Array[Int]): Int = contextF(hand, eleven = false, bust = false) match {
-    case x1 if isBust(x1) => contextF(hand, eleven = true, bust = false ) match {
+    case x1 if isBust(x1) => contextF(hand, eleven = true, bust = false) match {
       case x2 if isBust(x2) => contextF(hand, eleven = true, bust = true)
       case other => other
     }
@@ -63,7 +66,7 @@ object TwentyOneGame {
   }
 
   // credit to kylewlacy https://gist.github.com/kylewlacy/38681caaee2b98949dd8
-  def partialCartesian(a:Array[Array[Int]], b:Array[Int]): Array[Array[Int]] = {
+  def partialCartesian(a: Array[Array[Int]], b: Array[Int]): Array[Array[Int]] = {
     a.flatMap(xs => {
       b.map(y => {
         xs ++ Array(y)
@@ -78,7 +81,7 @@ object TwentyOneGame {
         val init = head.map(n => Array(n))
 
         tail.foldLeft(init)((arr, list) => {
-         partialCartesian(arr, list)
+          partialCartesian(arr, list)
         })
       }
       case None => {
@@ -93,10 +96,10 @@ object TwentyOneGame {
 
 
   def main(args: Array[String]): Unit = {
-//    println(arrayToString(parse("2")))
-//    println(arrayToString(parseAll(Array("2", "A"))))
-//    println(arrayToString(values(11)))
-//    println(arrayToString(values(1)))
+    //    println(arrayToString(parse("2")))
+    //    println(arrayToString(parseAll(Array("2", "A"))))
+    //    println(arrayToString(values(11)))
+    //    println(arrayToString(values(1)))
     val hand = Array(8, 11, 11)
     println(determineBestestHandValue(hand))
   }

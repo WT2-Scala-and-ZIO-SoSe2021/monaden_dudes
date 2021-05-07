@@ -58,7 +58,7 @@ class TestTaskTwoTypes extends AnyFlatSpec {
 
   "A stack reverse" should "return a new stack with reverse order elements" in {
     val stack = StackElem(1, StackElem(2, StackElem(3, StackEmpty())))
-    val stackReversed = stack.reverse(None)
+    val stackReversed = stack.reverse()
     val reverseStack = StackElem(3, StackElem(2, StackElem(1, StackEmpty())))
     assert(stackReversed.top.get == 3)
     assert(stackReversed.pop.get.top.get == 2)
@@ -69,7 +69,7 @@ class TestTaskTwoTypes extends AnyFlatSpec {
 
   "A stack reverse on an empty stack" should "return the stack" in {
     val emptyStack = StackEmpty()
-    assert(emptyStack.reverse(None) == StackEmpty())
+    assert(emptyStack.reverse() == StackEmpty())
   }
 
   // Queue Tests

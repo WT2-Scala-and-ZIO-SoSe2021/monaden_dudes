@@ -50,7 +50,7 @@ trait StackLike[T] {
 
   def isEmpty: Boolean
 
-  def reverse(newStack: Option[StackLike[T]]): StackLike[T]
+  def reverse(reverseStack: StackLike[T] = StackEmpty()): StackLike[T]
 }
 
 case class StackElem[T](elem: T, tail: StackLike[T]) extends StackLike[T] {
@@ -60,17 +60,17 @@ case class StackElem[T](elem: T, tail: StackLike[T]) extends StackLike[T] {
 
   override def isEmpty: Boolean = false
 
-  override def reverse(reverseStack: Option[StackLike[T]]): StackLike[T] = reverseStack match {
-    case Some(StackElem(_,_)) =>
-      val nextReverseStack = reverseStack.get.push(this.elem)
+  override def reverse(reverseStack: StackLike[T] = StackEmpty()): StackLike[T] = reverseStack match {
+    case StackElem(_,_) =>
+      val nextReverseStack = reverseStack.push(this.elem)
       this.tail match {
-        case StackElem(_,_) => this.tail.reverse(Some[StackLike[T]](nextReverseStack))
+        case StackElem(_,_) => this.tail.reverse(nextReverseStack)
         case StackEmpty() => nextReverseStack
       }
-    case None =>
+    case StackEmpty() =>
       val newReverseStack = StackElem(this.elem, StackEmpty())
       this.tail match {
-        case StackElem(_,_) => this.tail.reverse(Some[StackLike[T]](newReverseStack))
+        case StackElem(_,_) => this.tail.reverse(newReverseStack)
         case StackEmpty() => newReverseStack
       }
   }
@@ -83,7 +83,7 @@ case class StackEmpty[T]() extends StackLike[T] {
 
   override def isEmpty: Boolean = true
 
-  override def reverse(newStack: Option[StackLike[T]]): StackLike[T] = this
+  override def reverse(newStack: StackLike[T] = StackEmpty()): StackLike[T] = this
 }
 
 trait QueueLike[T] {
@@ -110,7 +110,7 @@ case class QueueImpl[T](inQueue: StackLike[T], outQueue: StackLike[T]) extends Q
     case StackEmpty() => this.inQueue match {
       case StackEmpty() => Try(QueueImpl(StackEmpty[T](), StackEmpty[T]()))
       case StackElem(_,_) => {
-        val newOutQueue = this.inQueue.reverse(None)
+        val newOutQueue = this.inQueue.reverse()
         val dequeuedOutQueue = newOutQueue.pop().get
         val newInQueue = StackEmpty[T]()
         Try(QueueImpl(newInQueue, dequeuedOutQueue))
@@ -125,7 +125,7 @@ case class QueueImpl[T](inQueue: StackLike[T], outQueue: StackLike[T]) extends Q
   override def front() = this.outQueue match {
     case StackEmpty() => this.inQueue match {
       case StackEmpty() => None
-      case _ => this.inQueue.reverse(None).top()
+      case _ => this.inQueue.reverse().top()
     }
     case _ => this.outQueue.top()
 

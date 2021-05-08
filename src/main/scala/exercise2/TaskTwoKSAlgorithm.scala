@@ -19,12 +19,13 @@ object TaskTwoKSAlgorithm {
   }
 
   def loop(audioQueue: Queue[Double], audioFunction: Double=>Unit) = {
-    var currentQueue = audioQueue
-    while (true) {
-      currentQueue = update(currentQueue)
+    @tailrec
+    def audioLoop(queue: Queue[Double], audioFunction: Double=>Unit): Unit = {
+      val currentQueue = update(queue)
       audioFunction(currentQueue.last)
+      audioLoop(currentQueue, audioFunction)
     }
-
+    audioLoop(audioQueue, audioFunction)
   }
 
   def play(double: Double) = {
@@ -34,7 +35,7 @@ object TaskTwoKSAlgorithm {
 
 
   def main(args: Array[String]): Unit = {
-    val queue = whiteNoise()
+    val queue = whiteNoise(volume = 0.5)
     loop(queue, play)
   }
 

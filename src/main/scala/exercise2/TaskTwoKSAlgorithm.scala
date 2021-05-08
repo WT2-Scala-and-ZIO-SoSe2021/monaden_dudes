@@ -1,3 +1,4 @@
+package exercise2
 import lib.StdAudio
 
 import scala.annotation.tailrec
@@ -18,7 +19,7 @@ object TaskTwoKSAlgorithm {
     newQueue.appended(newValue)
   }
 
-  def loop(audioQueue: Queue[Double], audioFunction: Double=>Unit) = {
+  def loop(audioQueue: Queue[Double], audioFunction: Double=>Unit):Unit = {
     @tailrec
     def audioLoop(queue: Queue[Double], audioFunction: Double=>Unit): Unit = {
       val currentQueue = update(queue)
@@ -28,7 +29,7 @@ object TaskTwoKSAlgorithm {
     audioLoop(audioQueue, audioFunction)
   }
 
-  def play(double: Double) = {
+  def play(double: Double):Unit = {
     StdAudio.play(Array(double))
   }
 

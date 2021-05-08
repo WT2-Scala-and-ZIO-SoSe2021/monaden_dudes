@@ -33,8 +33,6 @@ object TaskTwoKSAlgorithm {
     StdAudio.play(Array(double))
   }
 
-
-
   def main(args: Array[String]): Unit = {
     val queue = whiteNoise(volume = 0.5)
     loop(queue, play)

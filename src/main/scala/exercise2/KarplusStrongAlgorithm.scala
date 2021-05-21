@@ -9,10 +9,12 @@ import scala.annotation.tailrec
 object KarplusStrongAlgorithm {
 
   val EnergyDecayFactor = 0.996
+  val fundamentalFrequency = 440
 
-  def whiteNoise(frequency: Int = 440, volume: Double = 1.0): Queue[Double] = {
+  def whiteNoise(frequency: Double = 440.0, volume: Double = 1.0): Queue[Double] = {
+    val realFrequency = (fundamentalFrequency * (fundamentalFrequency.toDouble/frequency))
     val r = new Random()
-    (1 to frequency)
+    (1 to realFrequency.toInt)
       .map(_ => r.between(-0.5, 0.5) * volume)
       .to(Queue)
   }
@@ -38,7 +40,7 @@ object KarplusStrongAlgorithm {
   }
 
   def main(args: Array[String]): Unit = {
-    loop(StdAudio.play)(whiteNoise())
+    loop(StdAudio.play)(whiteNoise(frequency = 16.0))
   }
 
 }

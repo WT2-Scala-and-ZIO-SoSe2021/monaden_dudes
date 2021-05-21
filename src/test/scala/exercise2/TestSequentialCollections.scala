@@ -9,6 +9,13 @@ class TestSequentialCollections extends AnyFlatSpec {
     assert(stack.push(10) == resultStack)
   }
 
+  "A push on a stack (syntax sugar)" should "add the new element to the top of the stack" in {
+    val stack = StackLike(1,2)
+    val resultStack = StackLike(10,1,2)
+    assert(stack.push(10) == resultStack)
+  }
+
+
   "A push on an empty stack" should "return a stack with one element" in {
     val stack = StackEndElement[Int]()
     val resultStack = StackElement(1)

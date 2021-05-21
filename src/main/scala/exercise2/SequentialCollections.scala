@@ -35,6 +35,22 @@ trait StackLike[T] {
   def push(elem: T): StackLike[T] = StackElement[T](elem, this)
 }
 
+object StackLike {
+  def apply[T](elements: T*): StackLike[T] = {
+    val baseStack = StackEndElement[T]()
+    @tailrec
+    def addToStack(stackLike: StackLike[T], elements: Seq[T]): StackLike[T] = {
+      if (elements.isEmpty) {
+        stackLike
+      } else {
+        val pushedStack = stackLike.push(elements.head)
+        addToStack(pushedStack, elements.tail)
+      }
+    }
+    addToStack(baseStack, elements.reverse)
+  }
+}
+
 case class StackEndElement[T]() extends StackLike[T]
 
 case class StackElement[T](head: T, tail: StackLike[T] = StackEndElement[T]()) extends StackLike[T]

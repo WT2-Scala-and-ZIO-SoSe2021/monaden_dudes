@@ -1,3 +1,5 @@
+package exercise0
+
 import org.scalatest.exceptions.TestFailedException
 import org.scalatest.flatspec.AnyFlatSpec
 

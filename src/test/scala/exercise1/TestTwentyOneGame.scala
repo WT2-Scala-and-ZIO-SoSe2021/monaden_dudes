@@ -1,7 +1,9 @@
+package exercise1
+
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should
 
-class TestTwentyOne extends AnyFlatSpec with should.Matchers {
+class TestTwentyOneGame extends AnyFlatSpec with should.Matchers {
   "Low Hand value" should "not result in isBust true" in {
     assert(!TwentyOneGame.isBust(0))
   }

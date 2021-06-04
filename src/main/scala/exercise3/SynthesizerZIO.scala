@@ -15,10 +15,10 @@ import scala.collection.immutable.Queue
 object SynthesizerZIO extends zio.App {
 
   val EnergyDecayFactor = 0.996
-  val fundamentalFrequency = 440
+  val fundamentalFrequency = 440.0
 
   def whiteNoise(frequency: Double = 440.0, volume: Double = 1.0): URIO[Random, Queue[Double]] = {
-    val realFrequency = (fundamentalFrequency * (fundamentalFrequency.toDouble/frequency))
+    val realFrequency = (fundamentalFrequency * (fundamentalFrequency/frequency))
     nextDoubleBetween(-0.5, 0.5)
       .map(r => volume * r)
       .replicateM(realFrequency.toInt)

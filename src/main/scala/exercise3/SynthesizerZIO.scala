@@ -1,14 +1,12 @@
 package exercise3
-import java.io.IOException
 
-import exercise2.KarplusStrongAlgorithm.{loop, update, whiteNoise}
+import exercise2.KarplusStrongAlgorithm.update
 import lib.StdAudio
 import zio.{UIO, URIO, ZIO}
 import zio.console._
 import zio.random.{nextDoubleBetween, _}
 import zio._
 
-import scala.annotation.tailrec
 import scala.collection.immutable.Queue
 
 
@@ -41,9 +39,9 @@ object SynthesizerZIO extends zio.App {
 
   def run(args: List[String]): URIO[Random with Console, ExitCode] = {
     for {
-      q <- whiteNoise(frequency = 440.0, volume = 0.5)
-      poop <- loop(q).exitCode
-    } yield poop
+      q <- whiteNoise(volume = 0.5)
+      l <- loop(q).exitCode
+    } yield l
 
   }
 

@@ -16,7 +16,8 @@ object temperatureTask {
     println(display(absoluteZero)(US))
     println(display(absoluteZero)(SCI))
 
+    println("setting locale to Scientific Mode, temperature should display as Kelvin")
     implicit val locale: Locale = SCI
-
+    println(display(2.0))
   }
 }

@@ -25,3 +25,5 @@ object Ior {
 case class Left[E, A](error: E) extends Ior[E, A]
 case class Right[E, A](element: A) extends Ior[E, A]
 case class Both[E, A](error: E, element: A) extends Ior[E, A]
+
+

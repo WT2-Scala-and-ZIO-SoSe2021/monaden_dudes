@@ -1,10 +1,11 @@
 import zio.blocking.{Blocking, effectBlocking}
 import zio.clock.Clock
-import zio.random.{Random, nextLong, nextString}
+import zio.random.{Random, nextLong, nextLongBetween, nextString}
 import zio.{Dequeue, DurationSyntax, ExitCode, Has, Hub, Queue, Schedule, UIO, ULayer, URIO, ZEnv, ZHub, ZIO, ZLayer, ZManaged}
 import zio.duration.{Duration, durationLong}
 import zio.console._
 import java.io.IOException
+
 
 package object autozion {
   type MyEnv = Has[News] with Has[JobBoard] with Has[CompletedJobsHub] with Random with Clock with Blocking with Console
@@ -57,7 +58,7 @@ package object autozion {
   }
 
   object CompletedJobsHub {
-    def subscribe: URIO[Has[CompletedJobsHub], Dequeue[CompletedJob]] = ZIO.serviceWith[CompletedJobsHub](_.subscribe.useForever)
+    def subscribe: URIO[Has[CompletedJobsHub], Dequeue[CompletedJob]] = ZIO.serviceWith[CompletedJobsHub](_.subscribe.useNow)
 
     def publish(job: CompletedJob): URIO[Has[CompletedJobsHub], Unit] = ZIO.serviceWith[CompletedJobsHub](_.publish(job))
   }
@@ -120,15 +121,16 @@ package object autozion {
     }
 
     override def work(): ZIO[ElderEnv, Any, Unit] = {
-      val action: ZIO[Has[JobBoard] with Console with Random, Any, Unit] = for {
-        randomLong <- nextLong
+      val action: ZIO[Has[JobBoard]with Random, Any, Unit] = for {
+        randomLong <- nextLongBetween(2, 5)
         duration = randomLong.seconds
         job = PendingJob(duration)
-        _ <- putStrLn(job.toString)
+//        _ <- putStrLn(this.name)
+//        _ <- putStrLn(job.toString)
         _ <- JobBoard.submit(job)
       } yield ()
 
-      val policy: Schedule[Any, Any, Long] = Schedule.spaced(2.seconds)
+      val policy: Schedule[Any, Any, Long] = Schedule.spaced(2.seconds).delayed(_ => 5.seconds)
       (action repeat policy).unit
     }
   }
@@ -162,13 +164,19 @@ package object autozion {
       s"Overseer_$randomString"
     }
 
-    override def work(): ZIO[OverseerEnv, Any, Unit] = {
+    override def work(): ZIO[OverseerEnv with Console, Any, Unit] = {
       val action = for {
+//        _ <- putStrLn(s"Overseer $name kicking into action")
         jobSubscription <- CompletedJobsHub.subscribe
-        completedJob <- jobSubscription.take
-        jobName = completedJob.toString
-        workerName = completedJob.completedBy
-        _ <- News.post(s"Job $jobName completed by $workerName.")
+        _ <- putStrLn(s"Connection to CompletedJobsHub $jobSubscription established")
+        subscriptionSize <- jobSubscription.size
+        _ <- putStrLn(s"Dequeue is of size $subscriptionSize")
+//        completedJob <- jobSubscription.take
+////        _ <- putStrLn(s"found completed Job $completedJob")
+//        jobName = completedJob.toString
+//        workerName = completedJob.completedBy
+//        _ <- putStrLn(s"Overseer $name overseeing worker $workerName activity on job $jobName")
+//        _ <- News.post(s"Job $jobName completed by $workerName.")
       } yield()
       val policy = Schedule.spaced(1.seconds)
 

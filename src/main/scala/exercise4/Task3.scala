@@ -3,22 +3,26 @@ import java.util.concurrent.TimeUnit
 
 import autozion._
 import zio._
+import zio.duration.durationInt
 
 object Task3 extends zio.App {
-  val program: ZIO[Any, Nothing, Unit] = for {
-    elders <- (ZIO.succeed(Elder) zipPar ZIO.succeed(Elder))
-    workers <- (ZIO.succeed(Worker) zipPar ZIO.succeed(Worker))
-    overseers <- (ZIO.succeed(Overseer))
-    praisers <- (ZIO.succeed(Praiser))
-    reporters <- (ZIO.succeed(Reporter))
-    robots <- (ZIO.succeed(elders)
-      zipPar ZIO.succeed(overseers)
-      zipPar ZIO.succeed(workers)
-      zipPar ZIO.succeed(praisers)
-      zipPar ZIO.succeed(reporters)).fork
-    _ <- robots.join
+  val program: ZIO[MyEnv, Any, Unit] = for {
+    _ <- ZIO.sleep(5.seconds)
+    _ <- (Elder().work() zipPar Elder().work()).fork
+//    _ <- ZIO.sleep(2.seconds)
+    _ <- (Worker().work() zipPar Worker().work()).fork
+//    _ <- ZIO.sleep(2.seconds)
+    _ <- Overseer().work().fork
+    _ <- Praiser().work().fork
+    _ <- Reporter().work()
+//    robots <- (ZIO.succeed(elders)
+//      zipPar ZIO.succeed(overseers)
+//      zipPar ZIO.succeed(workers)
+//      zipPar ZIO.succeed(praisers)
+//      zipPar ZIO.succeed(reporters)).fork
+//    _ <- robots.join
   } yield ()
 
-  override def run(args: List[String]): URIO[zio.ZEnv, ExitCode] = program.exitCode
+  override def run(args: List[String]): URIO[zio.ZEnv, ExitCode] = program.provideCustomLayer(NewsLive.layer ++ JobBoardLive.layer ++ CompletedJobsHubLive.layer).exitCode
 
 }

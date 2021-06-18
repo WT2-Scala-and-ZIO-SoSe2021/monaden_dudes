@@ -28,7 +28,7 @@ object Task2 extends zio.App {
 
 //      fib0 <- ZIO.fail("buh boh binky").fork
 //      fib1 <- (ZIO.fail("uh oh stinky") zipPar fib0.join).fork
-//      fib2 <- (ZIO.fail("Errorre")).fork
+//      fib2 <- (ZIO.fail("Errore")).fork
 //
 //      a <- fib3.join
 ////      a <- "aaaa"

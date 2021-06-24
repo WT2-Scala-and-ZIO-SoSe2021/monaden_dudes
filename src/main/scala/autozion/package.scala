@@ -1,7 +1,7 @@
 import zio.blocking.{Blocking, effectBlocking}
 import zio.clock.Clock
 import zio.random.{Random, nextLong, nextLongBetween, nextString}
-import zio.{Dequeue, DurationSyntax, ExitCode, Has, Hub, Queue, Schedule, UIO, ULayer, URIO, ZEnv, ZHub, ZIO, ZLayer, ZManaged}
+import zio.{Dequeue, DurationSyntax, ExitCode, Has, Hub, Managed, Queue, Schedule, UIO, ULayer, URIO, ZEnv, ZHub, ZIO, ZLayer, ZManaged}
 import zio.duration.{Duration, durationLong}
 import zio.console._
 import java.io.IOException
@@ -12,13 +12,13 @@ package object autozion {
 
   trait Robot {
     def name: String
-    def work(): ZIO[MyEnv, Any, Unit]
+    def work: ZIO[MyEnv, Any, Unit]
   }
 
   sealed trait Job
 
-  case class PendingJob(duration: Duration) extends Job
-  case class CompletedJob(completedBy: String) extends Job
+  case class PendingJob(name: String, duration: Duration) extends Job
+  case class CompletedJob(name: String, completedBy: Robot) extends Job
 
 
   trait JobBoard {
@@ -58,7 +58,7 @@ package object autozion {
   }
 
   object CompletedJobsHub {
-    def subscribe: URIO[Has[CompletedJobsHub], Dequeue[CompletedJob]] = ZIO.serviceWith[CompletedJobsHub](_.subscribe.useNow)
+    def subscribe: ZManaged[Has[CompletedJobsHub], Nothing, Dequeue[CompletedJob]] = Managed.accessManaged[Has[CompletedJobsHub]](_.get.subscribe)
 
     def publish(job: CompletedJob): URIO[Has[CompletedJobsHub], Unit] = ZIO.serviceWith[CompletedJobsHub](_.publish(job))
   }
@@ -112,21 +112,21 @@ package object autozion {
   type PraiserEnv = Has[News] with Has[CompletedJobsHub] with Clock
   type ReporterEnv = Has[News] with Clock with Console
 
-  case class Elder() extends Robot{
-    override def name: String = {
-      val randomString = for {
-        randomString <- nextString(5)
-      } yield randomString
-      s"Elder_$randomString"
-    }
+  case class Elder(val name: String = "Elder") extends Robot{
+//    override def name: String = {
+//      val randomString = for {
+//        randomString <- nextString(5)
+//      } yield randomString
+//      s"Elder_$randomString"
+//    }
 
-    override def work(): ZIO[ElderEnv, Any, Unit] = {
-      val action: ZIO[Has[JobBoard]with Random, Any, Unit] = for {
+    override def work: ZIO[ElderEnv, Any, Unit] = {
+      val action: ZIO[Has[JobBoard]with Random with Console, Any, Unit] = for {
         randomLong <- nextLongBetween(2, 5)
         duration = randomLong.seconds
-        job = PendingJob(duration)
-//        _ <- putStrLn(this.name)
-//        _ <- putStrLn(job.toString)
+        jobName = name + "job" + duration.toString
+        job = PendingJob(jobName, duration)
+//        _ <- putStrLn(s"${this.name} putting job ${jobName} on the Board")
         _ <- JobBoard.submit(job)
       } yield ()
 
@@ -135,19 +135,20 @@ package object autozion {
     }
   }
 
-  case class Worker() extends Robot{
-    override def name: String = {
-      val randomString = for {
-        randomString <- nextString(5)
-      } yield randomString
-      s"Worker_$randomString"
-    }
+  case class Worker(val name: String = "Worker") extends Robot{
+//    override def name: String = {
+//      val randomString = for {
+//        randomString <- nextString(5)
+//      } yield randomString
+//      s"Worker_$randomString"
+//    }
 
-    override def work(): ZIO[WorkerEnv, Any, Unit] = {
+    override def work: ZIO[WorkerEnv with Console, Any, Unit] = {
       val action = for {
         job <- JobBoard.take()
+//        _ <- putStrLn(s"${this.name} recieved job ${job.name}, commencing work")
         _ <- effectBlocking(Thread.sleep(job.duration.toMillis))
-        _ <- CompletedJobsHub.publish(CompletedJob(name))
+        _ <- CompletedJobsHub.publish(CompletedJob(job.name, this))
       } yield()
 
       val policy = Schedule.spaced(2.seconds)
@@ -156,70 +157,66 @@ package object autozion {
     }
   }
 
-  case class Overseer() extends Robot{
-    override def name: String = {
-      val randomString = for {
-        randomString <- nextString(5)
-      } yield randomString
-      s"Overseer_$randomString"
-    }
+  case class Overseer(val name: String = "Overseer") extends Robot{
+//    override def name: String = {
+//      val randomString = for {
+//        randomString <- nextString(5)
+//      } yield randomString
+//      s"Overseer_$randomString"
+//    }
 
-    override def work(): ZIO[OverseerEnv with Console, Any, Unit] = {
+    override def work: ZIO[OverseerEnv with Console, IOException, Unit] = {
       val action = for {
 //        _ <- putStrLn(s"Overseer $name kicking into action")
         jobSubscription <- CompletedJobsHub.subscribe
-        _ <- putStrLn(s"Connection to CompletedJobsHub $jobSubscription established")
-        subscriptionSize <- jobSubscription.size
-        _ <- putStrLn(s"Dequeue is of size $subscriptionSize")
-//        completedJob <- jobSubscription.take
-////        _ <- putStrLn(s"found completed Job $completedJob")
-//        jobName = completedJob.toString
-//        workerName = completedJob.completedBy
+//        _ <- putStrLn(s"Connection to CompletedJobsHub $jobSubscription. established")
+//        subscriptionSize <- jobSubscription.size
+        completedJob = jobSubscription.take
+//        _ <- putStrLn(s"found completed Job $completedJob")
 //        _ <- putStrLn(s"Overseer $name overseeing worker $workerName activity on job $jobName")
-//        _ <- News.post(s"Job $jobName completed by $workerName.")
+        _ <- News.post(s"Job ${completedJob.map(_.name)} completed by ${completedJob.map(_.name)}.").toManaged_
       } yield()
       val policy = Schedule.spaced(1.seconds)
 
-      (action repeat policy).unit
+      (action.useNow repeat policy).unit
     }
   }
 
-  case class Praiser() extends Robot{
-    override def name: String = {
-      val randomString = for {
-        randomString <- nextString(5)
-      } yield randomString
-      s"Praiser_$randomString"
-    }
+  case class Praiser(val name: String = "Praiser") extends Robot{
+//    override def name: String = {
+//      val randomString = for {
+//        randomString <- nextString(5)
+//      } yield randomString
+//      s"Praiser_$randomString"
+//    }
 
-    override def work(): ZIO[PraiserEnv, Any, Unit] = {
+    override def work: ZIO[PraiserEnv, Any, Unit] = {
       val action = for {
         jobSubscription <- CompletedJobsHub.subscribe
-        completedJob <- jobSubscription.take
-        workerName = completedJob.completedBy
-        _ <- News.post(s"Thank you $workerName for completing that task!")
+        completedJob <- jobSubscription.take.toManaged_
+        workerName = completedJob.completedBy.name
+        _ <- News.post(s"Thank you $workerName for completing that task!").toManaged_
       } yield()
 
-      val policy = Schedule.fixed(2.seconds)
+      val policy = Schedule.fixed(1.seconds)
 
-      (action repeat policy).unit
+      (action.useNow repeat policy).unit
     }
   }
 
-  case class Reporter() extends Robot{
-    override def name: String = {
-      val randomString = for {
-        randomString <- nextString(5)
-      } yield randomString
-      s"Reporter_$randomString"
-    }
+  case class Reporter(val name: String = "Reporter") extends Robot{
+//    override def name: String = {
+//      val randomString = for {
+//        randomString <- nextString(5)
+//      } yield randomString
+//      s"Reporter_$randomString"
+//    }
 
-    override def work(): ZIO[ReporterEnv, Any, Unit] = {
+    override def work: ZIO[ReporterEnv, Any, Unit] = {
       val action = for {
-        _ <- putStrLn("Breaking News! ")
+//        _ <- putStrLn("Breaking News! ")
         news <- News.proclaim
         _ <- putStrLn(s"$news")
-        _ <- putStrLn("Did it work?")
       } yield()
       val policy = Schedule.spaced(1.seconds)
 

@@ -113,12 +113,6 @@ package object autozion {
   type ReporterEnv = Has[News] with Clock with Console
 
   case class Elder(val name: String = "Elder") extends Robot{
-//    override def name: String = {
-//      val randomString = for {
-//        randomString <- nextString(5)
-//      } yield randomString
-//      s"Elder_$randomString"
-//    }
 
     override def work: ZIO[ElderEnv, Any, Unit] = {
       val action: ZIO[Has[JobBoard]with Random with Console, Any, Unit] = for {
@@ -126,7 +120,6 @@ package object autozion {
         duration = randomLong.seconds
         jobName = name + "job" + duration.toString
         job = PendingJob(jobName, duration)
-//        _ <- putStrLn(s"${this.name} putting job ${jobName} on the Board")
         _ <- JobBoard.submit(job)
       } yield ()
 
@@ -136,17 +129,10 @@ package object autozion {
   }
 
   case class Worker(val name: String = "Worker") extends Robot{
-//    override def name: String = {
-//      val randomString = for {
-//        randomString <- nextString(5)
-//      } yield randomString
-//      s"Worker_$randomString"
-//    }
 
     override def work: ZIO[WorkerEnv with Console, Any, Unit] = {
       val action = for {
         job <- JobBoard.take()
-//        _ <- putStrLn(s"${this.name} recieved job ${job.name}, commencing work")
         _ <- effectBlocking(Thread.sleep(job.duration.toMillis))
         _ <- CompletedJobsHub.publish(CompletedJob(job.name, this))
       } yield()
@@ -158,21 +144,10 @@ package object autozion {
   }
 
   case class Overseer(val name: String = "Overseer") extends Robot{
-//    override def name: String = {
-//      val randomString = for {
-//        randomString <- nextString(5)
-//      } yield randomString
-//      s"Overseer_$randomString"
-//    }
 
     override def work: ZIO[OverseerEnv with Console, IOException, Unit] = {
       val action = for {
-//        _ <- putStrLn(s"Overseer $name kicking into action")
         completedJob <- CompletedJobsHub.subscribe.use(q => q.take)
-//        _ <- putStrLn(s"Connection to CompletedJobsHub $jobSubscription. established")
-//        subscriptionSize <- jobSubscription.size
-//        _ <- putStrLn(s"found completed Job $completedJob")
-//        _ <- putStrLn(s"Overseer $name overseeing worker $workerName activity on job $jobName")
         _ <- News.post(s"Job '${completedJob.name}' completed by ${completedJob.completedBy.name}.")
       } yield()
       val policy = Schedule.spaced(1.seconds)
@@ -182,12 +157,6 @@ package object autozion {
   }
 
   case class Praiser(val name: String = "Praiser") extends Robot{
-//    override def name: String = {
-//      val randomString = for {
-//        randomString <- nextString(5)
-//      } yield randomString
-//      s"Praiser_$randomString"
-//    }
 
     override def work: ZIO[PraiserEnv, Any, Unit] = {
       val action = for {
@@ -204,16 +173,9 @@ package object autozion {
   }
 
   case class Reporter(val name: String = "Reporter") extends Robot{
-//    override def name: String = {
-//      val randomString = for {
-//        randomString <- nextString(5)
-//      } yield randomString
-//      s"Reporter_$randomString"
-//    }
 
     override def work: ZIO[ReporterEnv, Any, Unit] = {
       val action = for {
-//        _ <- putStrLn("Breaking News! ")
         news <- News.proclaim
         _ <- putStrLn(s"$news")
       } yield()

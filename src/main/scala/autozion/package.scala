@@ -168,17 +168,16 @@ package object autozion {
     override def work: ZIO[OverseerEnv with Console, IOException, Unit] = {
       val action = for {
 //        _ <- putStrLn(s"Overseer $name kicking into action")
-        jobSubscription <- CompletedJobsHub.subscribe
+        completedJob <- CompletedJobsHub.subscribe.use(q => q.take)
 //        _ <- putStrLn(s"Connection to CompletedJobsHub $jobSubscription. established")
 //        subscriptionSize <- jobSubscription.size
-        completedJob = jobSubscription.take
 //        _ <- putStrLn(s"found completed Job $completedJob")
 //        _ <- putStrLn(s"Overseer $name overseeing worker $workerName activity on job $jobName")
-        _ <- News.post(s"Job ${completedJob.map(_.name)} completed by ${completedJob.map(_.name)}.").toManaged_
+        _ <- News.post(s"Job '${completedJob.name}' completed by ${completedJob.completedBy.name}.")
       } yield()
       val policy = Schedule.spaced(1.seconds)
 
-      (action.useNow repeat policy).unit
+      (action repeat policy).unit
     }
   }
 

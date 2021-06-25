@@ -16,7 +16,6 @@ object Task3 extends zio.App {
       for {
       _ <- worker1.work.fork
       _ <- worker2.work.fork
-      _ <- ZIO.sleep (Duration.fromMillis (100))
       _ <- elder1.work.fork
       _ <- elder2.work.fork
       _ <- overseer.work.fork

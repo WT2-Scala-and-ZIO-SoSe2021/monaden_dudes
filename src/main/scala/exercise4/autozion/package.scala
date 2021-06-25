@@ -5,8 +5,7 @@ import zio.clock.Clock
 import zio.console._
 import zio.duration.{Duration, durationLong}
 import zio.random.{Random, nextIntBounded, nextLongBetween, nextPrintableChar, nextString, nextUUID}
-import zio.{Has, Schedule, ZIO}
-
+import zio.{Has, RIO, Schedule, ZIO}
 import java.io.IOException
 
 
@@ -23,7 +22,7 @@ package object autozion {
   trait Robot {
     def name: String
 
-    def work: ZIO[MyEnv, Any, Unit]
+    def work: RIO[MyEnv, Unit]
   }
 
   case class PendingJob(name: String, duration: Duration) extends Job
@@ -32,7 +31,7 @@ package object autozion {
 
   case class Elder(name: String = "Elder") extends Robot {
 
-    override def work: ZIO[ElderEnv, Any, Unit] = (for {
+    override def work: RIO[ElderEnv, Unit] = (for {
       randomLong <- nextLongBetween(2, 5)
       duration = randomLong.seconds
       jobID <- nextUUID
@@ -44,7 +43,7 @@ package object autozion {
 
   case class Worker(name: String = "Worker") extends Robot {
 
-    override def work: ZIO[WorkerEnv with Console with Random, Any, Unit] = (for {
+    override def work: RIO[WorkerEnv with Console with Random, Unit] = (for {
       job <- JobBoard.take()
       num <- nextIntBounded(5)
       _ <- if (num == 1) {
@@ -64,7 +63,7 @@ package object autozion {
 
   case class Overseer(name: String = "Overseer") extends Robot {
 
-    override def work: ZIO[OverseerEnv with Console, IOException, Unit] = for {
+    override def work: RIO[OverseerEnv, Unit] = for {
       _ <- CompletedJobsHub.subscribe.use { queue =>
         (for {
           completedJob <- queue.take
@@ -77,7 +76,7 @@ package object autozion {
 
   case class Praiser(name: String = "Praiser") extends Robot {
 
-    override def work: ZIO[PraiserEnv, Any, Unit] = for {
+    override def work: RIO[PraiserEnv, Unit] = for {
       _ <- CompletedJobsHub.subscribe.use { queue =>
         (for {
           completedJob <- queue.take
@@ -90,7 +89,7 @@ package object autozion {
 
   case class Reporter(name: String = "Reporter") extends Robot {
 
-    override def work: ZIO[ReporterEnv, Any, Unit] = (for {
+    override def work: RIO[ReporterEnv, Unit] = (for {
       news <- News.proclaim
       _ <- putStrLn(s"Breaking News from $name: '$news'")
     } yield ()).repeat(Schedule.spaced(1.seconds)).unit

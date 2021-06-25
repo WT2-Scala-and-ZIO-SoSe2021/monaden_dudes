@@ -4,7 +4,7 @@ import zio.blocking.{Blocking, effectBlocking}
 import zio.clock.Clock
 import zio.console._
 import zio.duration.{Duration, durationLong}
-import zio.random.{Random, nextLongBetween}
+import zio.random.{Random, nextIntBounded, nextLongBetween, nextPrintableChar, nextString, nextUUID}
 import zio.{Has, Schedule, ZIO}
 
 import java.io.IOException
@@ -35,7 +35,8 @@ package object autozion {
     override def work: ZIO[ElderEnv, Any, Unit] = (for {
       randomLong <- nextLongBetween(2, 5)
       duration = randomLong.seconds
-      jobName = s"do something for ${duration.toSeconds.toString} seconds from $name"
+      jobID <- nextUUID
+      jobName = s"do $jobID for ${duration.toSeconds.toString} seconds from $name"
       job = PendingJob(jobName, duration)
       _ <- JobBoard.submit(job)
     } yield ()).repeat(Schedule.spaced(2.seconds).delayed(_ => 5.seconds)).unit
@@ -43,10 +44,21 @@ package object autozion {
 
   case class Worker(name: String = "Worker") extends Robot {
 
-    override def work: ZIO[WorkerEnv with Console, Any, Unit] = (for {
+    override def work: ZIO[WorkerEnv with Console with Random, Any, Unit] = (for {
       job <- JobBoard.take()
-      _ <- effectBlocking(Thread.sleep(job.duration.toMillis))
-      _ <- CompletedJobsHub.publish(CompletedJob(job.name, this))
+      num <- nextIntBounded(5)
+      _ <- if (num == 1) {
+        for {
+          _ <- putStrLn(s"$name: I am soooooo clumsy! I will put '${job.name}' back to the good old JobBoard")
+          _ <- JobBoard.submit(job)
+          _ <- effectBlocking(Thread.sleep(2000))
+        } yield ()
+      } else {
+        for {
+          _ <- effectBlocking(Thread.sleep(job.duration.toMillis))
+          _ <- CompletedJobsHub.publish(CompletedJob(job.name, this))
+        } yield ()
+      }
     } yield ()).repeat(Schedule.spaced(2.seconds)).unit
   }
 

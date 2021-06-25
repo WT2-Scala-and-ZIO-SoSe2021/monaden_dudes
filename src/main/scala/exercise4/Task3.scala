@@ -1,19 +1,17 @@
 package exercise4
-import java.util.concurrent.TimeUnit
-
-import autozion._
+import exercise4.autozion._
 import zio._
-import zio.duration.{Duration, durationInt}
+import zio.duration.Duration
 
 object Task3 extends zio.App {
   val program: ZIO[MyEnv, Any, Unit] = {
-    val elder1 = Elder("Elder John")
-    val elder2 = Elder("Elder Johnson")
-    val worker1 = Worker("Worker Johnathan")
-    val worker2 = Worker("Worker Jebediah")
-    val overseer = Overseer("Overseer Jay Leno")
-    val praiser = Praiser("Praiser Jacob")
-    val reporter = Reporter("Reporter Jojo")
+    val elder1 = Elder("[Elder] Edward")
+    val elder2 = Elder("[Elder] Eva")
+    val worker1 = Worker("[Worker] Walter")
+    val worker2 = Worker("[Worker] Winston")
+    val overseer = Overseer("[Overseer] Olaf")
+    val praiser = Praiser("[Praiser] Patrick")
+    val reporter = Reporter("[Reporter] Rudolph")
 
       for {
       _ <- worker1.work.fork

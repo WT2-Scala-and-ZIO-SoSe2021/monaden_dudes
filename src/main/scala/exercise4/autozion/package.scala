@@ -11,8 +11,8 @@ import java.io.IOException
 
 package object autozion {
   type MyEnv = Has[News] with Has[JobBoard] with Has[CompletedJobsHub] with Random with Clock with Blocking with Console
-  type ElderEnv = Has[JobBoard] with Random with Clock with Console
-  type WorkerEnv = Has[JobBoard] with Has[CompletedJobsHub] with Clock with Blocking
+  type ElderEnv = Has[JobBoard] with Random with Clock
+  type WorkerEnv = Has[JobBoard] with Has[CompletedJobsHub] with Clock with Blocking  with Console with Random
   type OverseerEnv = Has[News] with Has[CompletedJobsHub] with Clock
   type PraiserEnv = Has[News] with Has[CompletedJobsHub] with Clock
   type ReporterEnv = Has[News] with Clock with Console
@@ -43,7 +43,7 @@ package object autozion {
 
   case class Worker(name: String = "Worker") extends Robot {
 
-    override def work: RIO[WorkerEnv with Console with Random, Unit] = (for {
+    override def work: RIO[WorkerEnv, Unit] = (for {
       job <- JobBoard.take()
       num <- nextIntBounded(5)
       _ <- if (num == 1) {

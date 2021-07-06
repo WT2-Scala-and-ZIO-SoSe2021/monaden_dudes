@@ -1,24 +1,29 @@
 package exercise4
-import java.util.concurrent.TimeUnit
-
-import autozion._
+import exercise4.autozion._
 import zio._
+import zio.duration.Duration
 
 object Task3 extends zio.App {
-  val program: ZIO[Any, Nothing, Unit] = for {
-    elders <- (ZIO.succeed(Elder) zipPar ZIO.succeed(Elder))
-    workers <- (ZIO.succeed(Worker) zipPar ZIO.succeed(Worker))
-    overseers <- (ZIO.succeed(Overseer))
-    praisers <- (ZIO.succeed(Praiser))
-    reporters <- (ZIO.succeed(Reporter))
-    robots <- (ZIO.succeed(elders)
-      zipPar ZIO.succeed(overseers)
-      zipPar ZIO.succeed(workers)
-      zipPar ZIO.succeed(praisers)
-      zipPar ZIO.succeed(reporters)).fork
-    _ <- robots.join
-  } yield ()
+  val program: ZIO[MyEnv, Any, Unit] = {
+    val elder1 = Elder("[Elder] Edward")
+    val elder2 = Elder("[Elder] Eva")
+    val worker1 = Worker("[Worker] Walter")
+    val worker2 = Worker("[Worker] Winston")
+    val overseer = Overseer("[Overseer] Olaf")
+    val praiser = Praiser("[Praiser] Patrick")
+    val reporter = Reporter("[Reporter] Rudolph")
 
-  override def run(args: List[String]): URIO[zio.ZEnv, ExitCode] = program.exitCode
+      for {
+      _ <- worker1.work.fork
+      _ <- worker2.work.fork
+      _ <- elder1.work.fork
+      _ <- elder2.work.fork
+      _ <- overseer.work.fork
+      _ <- praiser.work.fork
+      _ <- reporter.work
+      } yield ()
+  }
+
+  override def run(args: List[String]): URIO[zio.ZEnv, ExitCode] = program.provideCustomLayer(NewsLive.layer ++ JobBoardLive.layer ++ CompletedJobsHubLive.layer).exitCode
 
 }
